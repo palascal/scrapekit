@@ -1,34 +1,57 @@
-# scrapekit
+# Shared scraping engine for [saxbot](https://github.com/palascal/saxbot) and [AudiTT](https://github.com/palascal/auditt).
 
-Moteur de scraping partagé pour **saxbot** et **AudiTT**.
+Leboncoin IMAP, Playwright helpers, seen/store/runner, telegram — **no product filters or dashboards**.
 
-Chaque app garde : filtres métier, `site_registry`, URL builders, UI/dashboard.
+## Install
 
-## Modules
+```bash
+pip install "git+https://github.com/palascal/scrapekit.git@master"
+# or editable (CI / local sibling):
+pip install -e ./scrapekit
+```
 
-| Module | Rôle |
-|--------|------|
-| `browser` | Playwright launch, stealth, cookies, anti-bot |
-| `scrapers.leboncoin_mail` | Alertes LBC via IMAP |
-| `scrapers.generic_listing` | SERP/catalogue Playwright |
-| `seen` / `listing_status` / `price` / `text` | Utilitaires |
-| `telegram` | Notifications (token injecté) |
-| `store` | listings.json merge / purge / report |
-| `runner` | Parallel scrape workers |
-| `env` | `.env.local` + IMAP |
+Local (Windows): keep this repo next to the apps:
 
-## Dev
+```
+Documents/
+  scrapekit/
+  saxbot/
+  AudiTT/
+```
+
+Each app `_bootstrap.ensure_scrapekit()` prefers the sibling folder, then the installed package.
+
+## CI (product repos)
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    repository: palascal/scrapekit
+    path: scrapekit
+    ref: master
+- run: pip install -e ./scrapekit
+```
+
+## Shared GitHub secrets (set on each product repo — same values)
+
+| Secret | Used by |
+|--------|---------|
+| `IMAP_EMAIL_ACCOUNT` | Leboncoin mail |
+| `IMAP_EMAIL_PASSWORD` | Gmail app password |
+| `IMAP_SERVER` | e.g. `imap.gmail.com` |
+| `CLOUDFLARE_API_TOKEN` | Pages / KV publish |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account |
+| `TELEGRAM_BOT_TOKEN` | Prefer **one bot per app** |
+| `TELEGRAM_CHAT_ID` | Chat destination |
+
+Tip: if you create a GitHub **Organization**, set these once as org secrets and grant both repos access.
+
+## Develop
 
 ```powershell
 cd C:\Users\coincoin\Documents\scrapekit
-pip install -e .
+# edit, then:
+git add -A && git commit -m "…" && git push
 ```
 
-Après modification, synchroniser les copies CI :
-
-```powershell
-# depuis AudiTT ou saxbot
-.\scripts\sync_scrapekit.ps1
-```
-
-Localement, `_bootstrap.ensure_scrapekit()` préfère `Documents\scrapekit` s’il existe.
+Product apps pick up the new `master` on next Actions run (they pin `ref: master`).
