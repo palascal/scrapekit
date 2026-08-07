@@ -53,6 +53,9 @@ class GenericListingScraper(BaseScraper):
         price_max_band: float = 40_000,
         allow_unknown_price: bool = False,
         fr_locales: frozenset[str] | None = None,
+        scroll_rounds: int = 6,
+        early_stop_seen: int = 12,
+        stop_site_when_warm: bool = True,
         **_kwargs,
     ):
         specs = dict(site_specs or {})
@@ -67,6 +70,9 @@ class GenericListingScraper(BaseScraper):
         self.price_min = price_min
         self.price_max_band = price_max_band
         self.allow_unknown_price = allow_unknown_price
+        self.scroll_rounds = max(0, int(scroll_rounds))
+        self.early_stop_seen = max(0, int(early_stop_seen))
+        self.stop_site_when_warm = bool(stop_site_when_warm)
         self.fr_locales = fr_locales or frozenset(
             {"reverb", "leboncoin", "audiofanzine", "zikinf", "vinted"}
         )
@@ -173,20 +179,20 @@ class GenericListingScraper(BaseScraper):
                         print(f"   ⚠️ goto: {e}")
                         continue
 
-                    time.sleep(2)
+                    time.sleep(1.2 if self.scroll_rounds <= 2 else 2)
                     try:
-                        page.wait_for_load_state("networkidle", timeout=15_000)
+                        page.wait_for_load_state("networkidle", timeout=12_000)
                     except Exception:
                         pass
                     dismiss_cookies(page)
-                    for _ in range(6):
+                    for _ in range(self.scroll_rounds):
                         try:
                             page.mouse.wheel(0, 2200)
                         except Exception:
                             break
-                        time.sleep(0.55)
+                        time.sleep(0.45)
                     try:
-                        page.wait_for_selector(wait_sel, timeout=45_000)
+                        page.wait_for_selector(wait_sel, timeout=35_000)
                     except Exception:
                         print(
                             f"   ⚠️ Timeout wait ({wait_sel}) — tentative d'extraction quand même"
@@ -281,6 +287,8 @@ class GenericListingScraper(BaseScraper):
                     print(f"   Liens bruts: {len(candidates)}")
                     added = 0
                     n_seen = n_filter = n_price = n_sold = n_skip = 0
+                    consecutive_seen = 0
+                    stopped_early = False
                     for entry in candidates:
                         if added >= self.max_results:
                             break
@@ -291,7 +299,18 @@ class GenericListingScraper(BaseScraper):
                         item_id = self._item_id(link)
                         if item_id in seen:
                             n_seen += 1
+                            consecutive_seen += 1
+                            if (
+                                self.early_stop_seen
+                                and consecutive_seen >= self.early_stop_seen
+                            ):
+                                print(
+                                    f"   ⛔ {consecutive_seen} déjà vus d'affilée → fin de page"
+                                )
+                                stopped_early = True
+                                break
                             continue
+                        consecutive_seen = 0
 
                         text = (entry.get("text") or "").strip()
                         card_text = (entry.get("cardText") or text).strip()
@@ -406,6 +425,21 @@ class GenericListingScraper(BaseScraper):
                             f"   (skip: déjà vus={n_seen}, filtre={n_filter}, "
                             f"prix={n_price}, vendu={n_sold}, autre={n_skip})"
                         )
+                    # Incremental daily: first page already known → skip remaining URLs
+                    if (
+                        self.stop_site_when_warm
+                        and added == 0
+                        and n_seen > 0
+                        and n_seen >= max(3, (n_seen + n_filter + n_skip + n_sold) // 2)
+                        and (stopped_early or j_idx < len(self._jobs))
+                    ):
+                        remaining = len(self._jobs) - j_idx
+                        if remaining > 0:
+                            print(
+                                f"   ⏭️ Site déjà à jour ({n_seen} vus) → "
+                                f"skip {remaining} page(s) restante(s)"
+                            )
+                            break
             finally:
                 ctx.close()
                 if browser is not None:
