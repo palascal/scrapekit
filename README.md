@@ -55,3 +55,14 @@ git add -A && git commit -m "…" && git push
 ```
 
 Product apps pick up the new `master` on next Actions run (they pin `ref: master`).
+
+## Scrape mode (`SCRAPE_MODE`)
+
+Shared by saxbot and AudiTT via `scrapekit.scrape_mode`:
+
+| Env | Behaviour |
+|-----|-----------|
+| `daily` (default) | Caps, early-stop on already-seen ads, lighter scroll, fewer purge HEAD checks |
+| `full` | Deeper pass (more results, more scroll, broader purge) |
+
+In CI, set `SCRAPE_MODE` from `workflow_dispatch` (`daily` \| `full`) or leave default for cron.

@@ -24,6 +24,7 @@ from scrapekit.browser import (
 from scrapekit.card_price import best_price_from_text
 from scrapekit.listing_status import is_sold_listing
 from scrapekit.price import price_within_max_eur
+from scrapekit.scrape_mode import listing_mode_kwargs
 from scrapekit.seen import load_seen
 
 MatchFn = Callable[..., bool]
@@ -38,7 +39,7 @@ class GenericListingScraper(BaseScraper):
         url=None,
         profile_path=None,
         headless=True,
-        max_results=60,
+        max_results=None,
         *,
         site_specs: Mapping[str, dict] | None = None,
         match_fn: MatchFn | None = None,
@@ -53,14 +54,15 @@ class GenericListingScraper(BaseScraper):
         price_max_band: float = 40_000,
         allow_unknown_price: bool = False,
         fr_locales: frozenset[str] | None = None,
-        scroll_rounds: int = 6,
-        early_stop_seen: int = 12,
-        stop_site_when_warm: bool = True,
+        scroll_rounds: int | None = None,
+        early_stop_seen: int | None = None,
+        stop_site_when_warm: bool | None = None,
         **_kwargs,
     ):
         specs = dict(site_specs or {})
         if site_key not in specs:
             raise ValueError(f"Unknown site_key: {site_key}")
+        mode = listing_mode_kwargs(site_key)
         self.site_key = site_key
         self.spec = specs[site_key]
         self.match_fn = match_fn
@@ -70,9 +72,18 @@ class GenericListingScraper(BaseScraper):
         self.price_min = price_min
         self.price_max_band = price_max_band
         self.allow_unknown_price = allow_unknown_price
-        self.scroll_rounds = max(0, int(scroll_rounds))
-        self.early_stop_seen = max(0, int(early_stop_seen))
-        self.stop_site_when_warm = bool(stop_site_when_warm)
+        self.scroll_rounds = max(
+            0, int(mode["scroll_rounds"] if scroll_rounds is None else scroll_rounds)
+        )
+        self.early_stop_seen = max(
+            0,
+            int(mode["early_stop_seen"] if early_stop_seen is None else early_stop_seen),
+        )
+        self.stop_site_when_warm = (
+            mode["stop_site_when_warm"]
+            if stop_site_when_warm is None
+            else bool(stop_site_when_warm)
+        )
         self.fr_locales = fr_locales or frozenset(
             {"reverb", "leboncoin", "audiofanzine", "zikinf", "vinted"}
         )
@@ -83,7 +94,9 @@ class GenericListingScraper(BaseScraper):
         else:
             self._jobs = []
         self.headless = headless
-        self.max_results = max_results
+        self.max_results = int(
+            mode["max_results"] if max_results is None else max_results
+        )
         self.cache_file = str(self.spec["seen_path"])
         self.pending_seen: list[str] = []
         self.stats = {
