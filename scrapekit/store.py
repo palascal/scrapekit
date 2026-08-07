@@ -132,7 +132,7 @@ def merge_new_listings(
 def purge_sold_and_dead(
     path: Path | str,
     *,
-    max_head_checks: int = 40,
+    max_head_checks: int = 120,
     user_agent: str = "scrapekit-purge/1.0",
     skip_hosts: tuple[str, ...] = ("ebay.", "reverb.", "soundsmarket."),
 ) -> dict:
@@ -142,6 +142,40 @@ def purge_sold_and_dead(
     removed_sold = 0
     removed_dead = 0
     checked = 0
+    dead_statuses = {404, 410, 451}
+
+    def _url_gone(lien: str) -> bool:
+        headers = {"User-Agent": user_agent}
+        try:
+            r = requests.head(lien, timeout=8, allow_redirects=True, headers=headers)
+            if r.status_code in dead_statuses:
+                return True
+            # Some shops reject HEAD; fall back to a light GET.
+            if r.status_code in {405, 403, 501} or r.status_code >= 500:
+                r = requests.get(
+                    lien,
+                    timeout=10,
+                    allow_redirects=True,
+                    headers=headers,
+                    stream=True,
+                )
+                r.close()
+                return r.status_code in dead_statuses
+        except requests.RequestException:
+            try:
+                r = requests.get(
+                    lien,
+                    timeout=10,
+                    allow_redirects=True,
+                    headers=headers,
+                    stream=True,
+                )
+                r.close()
+                return r.status_code in dead_statuses
+            except requests.RequestException:
+                return False
+        return False
+
     for it in items:
         if is_sold_listing(
             it.get("titre", ""),
@@ -156,13 +190,7 @@ def purge_sold_and_dead(
             try:
                 host = urlparse(lien).netloc
                 if host and not any(x in host for x in skip_hosts):
-                    r = requests.head(
-                        lien,
-                        timeout=8,
-                        allow_redirects=True,
-                        headers={"User-Agent": user_agent},
-                    )
-                    if r.status_code in {404, 410, 451}:
+                    if _url_gone(lien):
                         removed_dead += 1
                         continue
             except Exception:

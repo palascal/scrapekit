@@ -11,6 +11,10 @@ _SOLD_RE = re.compile(
     r"|\bépuis[ée]e?\b"
     r"|\bout\s+of\s+stock\b"
     r"|\bno\s+longer\s+available\b"
+    r"|\bindisponible\b"
+    r"|\bthis\s+listing\s+was\s+deleted\b"
+    r"|\bannonce\s+(?:supprim[ée]e|retir[ée]e|expir[ée]e)\b"
+    r"|\blisting\s+(?:removed|ended|expired)\b"
     r")",
     re.I,
 )
