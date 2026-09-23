@@ -165,6 +165,7 @@ class GenericListingScraper(BaseScraper):
                 env_keys=self.browser_profile_env,
                 data_dir=self.data_dir,
                 requires_residential=bool(self.spec.get("requires_residential")),
+                site_key=self.site_key,
             )
             locale = "fr-FR" if self.site_key in self.fr_locales else "en-US"
             browser, ctx, page = open_browser_context(

@@ -66,3 +66,13 @@ Shared by saxbot and AudiTT via `scrapekit.scrape_mode`:
 | `full` | Deeper pass (more results, more scroll, broader purge) |
 
 In CI, set `SCRAPE_MODE` from `workflow_dispatch` (`daily` \| `full`) or leave default for cron.
+
+## Site resilience (`run_parallel`)
+
+| Env | Default | Behaviour |
+|-----|---------|-----------|
+| `SCRAPE_SITE_TIMEOUT` | `900` | Soft timeout per site (seconds). Timed-out sites do not block purge/publish. |
+| `SCRAPE_RETRY_FAILED` | `1` | Retry timed-out/errored sites once at end of run (serial). |
+| `SCRAPE_RETRY_TIMEOUT` | same as site timeout | Timeout for the retry pass. |
+
+Browser profiles are isolated per `site_key` under the base profile dir so parallel workers do not lock the same Chromium profile.

@@ -1,6 +1,6 @@
 """Shared scraping engine for listing monitors (saxbot, AudiTT, …)."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from scrapekit.base import BaseScraper
 from scrapekit.scrape_mode import (

@@ -47,16 +47,29 @@ def resolve_profile_dir(
     env_keys: tuple[str, ...] = ("SCRAPEKIT_BROWSER_PROFILE",),
     data_dir: Path | str | None = None,
     requires_residential: bool = False,
+    site_key: str | None = None,
 ) -> str | None:
+    """
+    Resolve a Playwright user-data dir.
+    When site_key is set, use a per-site subdirectory so parallel workers
+    do not lock/corrupt the same Chromium profile.
+    """
+    base: str | None = None
     for key in env_keys:
         val = (os.getenv(key) or "").strip()
         if val:
-            return val
-    if data_dir:
+            base = val
+            break
+    if base is None and data_dir:
         default = Path(data_dir) / "browser_profile"
         if default.exists() or requires_residential:
-            return str(default)
-    return None
+            base = str(default)
+    if not base:
+        return None
+    if site_key:
+        safe = re.sub(r"[^a-zA-Z0-9_-]+", "_", site_key).strip("_") or "site"
+        return str(Path(base) / safe)
+    return base
 
 
 def open_browser_context(
