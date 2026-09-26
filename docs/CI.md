@@ -3,5 +3,5 @@
 
 # scrapekit/
 #   (checkout of palascal/scrapekit@master)
-# auditt|saxbot/
+# saxbot/
 #   (this repository)

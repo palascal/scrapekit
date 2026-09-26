@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "scrapekit"
 version = "0.1.0"
-description = "Shared scraping engine for saxbot, AudiTT, and similar listing monitors"
+description = "Shared scraping engine for saxbot and similar listing monitors"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

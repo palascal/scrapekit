@@ -1,4 +1,4 @@
-# Shared scraping engine for [saxbot](https://github.com/palascal/saxbot) and [AudiTT](https://github.com/palascal/auditt).
+# Shared scraping engine for [saxbot](https://github.com/palascal/saxbot).
 
 Leboncoin IMAP, Playwright helpers, seen/store/runner, telegram — **no product filters or dashboards**.
 
@@ -10,13 +10,12 @@ pip install "git+https://github.com/palascal/scrapekit.git@master"
 pip install -e ./scrapekit
 ```
 
-Local (Windows): keep this repo next to the apps:
+Local (Windows): keep this repo next to the app:
 
 ```
 Documents/
   scrapekit/
   saxbot/
-  AudiTT/
 ```
 
 Each app `_bootstrap.ensure_scrapekit()` prefers the sibling folder, then the installed package.
@@ -32,7 +31,7 @@ Each app `_bootstrap.ensure_scrapekit()` prefers the sibling folder, then the in
 - run: pip install -e ./scrapekit
 ```
 
-## Shared GitHub secrets (set on each product repo — same values)
+## Shared GitHub secrets (set on the product repo)
 
 | Secret | Used by |
 |--------|---------|
@@ -41,10 +40,8 @@ Each app `_bootstrap.ensure_scrapekit()` prefers the sibling folder, then the in
 | `IMAP_SERVER` | e.g. `imap.gmail.com` |
 | `CLOUDFLARE_API_TOKEN` | Pages / KV publish |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account |
-| `TELEGRAM_BOT_TOKEN` | Prefer **one bot per app** |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot |
 | `TELEGRAM_CHAT_ID` | Chat destination |
-
-Tip: if you create a GitHub **Organization**, set these once as org secrets and grant both repos access.
 
 ## Develop
 
@@ -58,7 +55,7 @@ Product apps pick up the new `master` on next Actions run (they pin `ref: master
 
 ## Scrape mode (`SCRAPE_MODE`)
 
-Shared by saxbot and AudiTT via `scrapekit.scrape_mode`:
+Via `scrapekit.scrape_mode`:
 
 | Env | Behaviour |
 |-----|-----------|

@@ -1,6 +1,6 @@
 """Shared scrape intensity (daily incremental vs full deep pass).
 
-Used by saxbot, AudiTT, and any app on scrapekit.
+Used by saxbot and any app on scrapekit.
 Override with env SCRAPE_MODE=daily|full.
 """
 

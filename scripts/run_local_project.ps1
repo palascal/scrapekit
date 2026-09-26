@@ -1,5 +1,5 @@
 # Shared local scrape + Cloudflare KV publish.
-# Used by saxbot and AudiTT thin wrappers.
+# Used by saxbot thin wrappers.
 #
 # Usage:
 #   .\run_local_project.ps1 -AppRoot "C:\...\saxbot" -KvNamespaceId "..." [-BrowserProfileEnv "SAXBOT_BROWSER_PROFILE"]

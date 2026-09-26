@@ -17,7 +17,7 @@ def _rate(names: tuple[str, ...], default: str) -> float:
     return float(default)
 
 
-# Prefer SCRAPEKIT_*, then project prefixes (saxbot / AudiTT)
+# Prefer SCRAPEKIT_*, then project prefixes (saxbot)
 _USD_EUR = _rate(("SCRAPEKIT_USD_EUR", "SAXBOT_USD_EUR", "AUDIT_USD_EUR"), "0.92")
 _GBP_EUR = _rate(("SCRAPEKIT_GBP_EUR", "SAXBOT_GBP_EUR", "AUDIT_GBP_EUR"), "1.17")
 
@@ -87,7 +87,7 @@ def price_within_max_eur(
 ) -> bool:
     """
     True if price is under ceiling.
-    allow_unknown=True keeps listings with unparseable prices (AudiTT SERP case).
+    allow_unknown=True keeps listings with unparseable prices (SERP / loose catalogs).
     allow_unknown=False rejects them (saxbot default).
     """
     if price_max_eur >= float("inf"):
